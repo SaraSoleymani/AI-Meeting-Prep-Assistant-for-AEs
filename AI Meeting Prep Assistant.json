@@ -1,0 +1,415 @@
+{
+  "name": "AI Meeting Prep Assistant copy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5a08f88a-7c0b-45e4-be86-6082c45c3a84",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        4672,
+        960
+      ],
+      "id": "0f552f61-f72b-4178-af3f-52239a1943a7",
+      "name": "Webhook1",
+      "webhookId": "5a08f88a-7c0b-45e4-be86-6082c45c3a84"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              },
+              {
+                "name": "Content-Disposition",
+                "value": "attachment; filename=\"meeting-briefs.xlsx\""
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        5664,
+        960
+      ],
+      "id": "0e2b3771-572b-4333-b592-ad4e9116dee9",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You have a new meeting prep request. Read teh Excel file.\n\nProspect Name: {{ $json.prospect_name }}\nProspect Title: {{ $json.prospect_title }}\nCompany: {{ $json.company_name }}\n\nUse the Prospect_Research tool to search for recent news and signals about {{ $json.company_name }}, then generate a structured meeting prep brief.",
+        "options": {
+          "systemMessage": "You are a helpful assistantYou are a senior enterprise AE with 10 years of experience selling to VP-level buyers. Your job is to write a concise, insight-driven meeting prep brief that helps an AE walk into the call prepared with specific signals and a point of view — not a generic company summary.\n\nAlways use the Prospect_Research tool first to gather recent information before writing the brief.\n\nReturn your response in this exact format:\n\n**Company Snapshot**\n2-3 sentences on what they do, who they serve, and their growth stage.\n\n**Recent Signals**\n2-3 bullet points of relevant recent news, funding, hires, or product announcements.\n\n**Buyer Profile**\nWho you are likely meeting with, what they care about, and what success looks like for them.\n\n**Most Likely Pain Point**\nOne specific challenge this company is probably facing that is relevant to what you sell.\n\n**Suggested Opening**\nA 1-2 sentence opener that references something specific. Not generic phrases like I saw you are growing fast.\n\nKeep the entire brief under 250 words. Be direct. Skip filler. If you do not have reliable context on a section, say so rather than guessing.\n\nA good brief gives an AE something specific to say in the first 30 seconds of a call. Generic information does not count."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5040,
+        960
+      ],
+      "id": "10c00a15-5f6a-4b82-895d-05268e075d4e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4912,
+        1168
+      ],
+      "id": "5b6fb8f5-f1a4-406f-9db9-ff8e88e1bb5e",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "=data0",
+        "options": {
+          "sheetName": "Sheet1"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        4864,
+        960
+      ],
+      "id": "60eb1db5-d27d-4f90-bc28-374b92324f1b",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "=data",
+        "options": {
+          "sheetName": "Sheet1"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        5472,
+        960
+      ],
+      "id": "530e1d49-d300-4a29-8249-a08a51e09988",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78f7e1e7-a535-4871-b0e9-a837331367c6",
+              "name": "prospect_name",
+              "value": "={{ $('Extract from File').item.json.prospect_name }}",
+              "type": "string"
+            },
+            {
+              "id": "9108d1f9-d933-47f4-87dd-3f5444f3c418",
+              "name": "prospect_title",
+              "value": "={{ $('Extract from File').item.json.prospect_title }}",
+              "type": "string"
+            },
+            {
+              "id": "3cb2097c-9324-45c8-b758-fc23c7894385",
+              "name": "company_name",
+              "value": "={{ $('Extract from File').item.json.company_name }}",
+              "type": "string"
+            },
+            {
+              "id": "20f06d05-49f7-418b-a093-4593e209bb88",
+              "name": "brief",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5312,
+        960
+      ],
+      "id": "965cc812-1c07-45af-a169-5e45b89b5330",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Webhook\nEntry point for the system. Receives the Excel file uploaded by the user from the v0 frontend as a binary POST request. Response mode is set to wait until the full workflow completes before sending anything back.",
+        "color": 4
+      },
+      "id": "7d00ebd6-d082-43f5-bf5e-98a406782887",
+      "name": "Sticky Note 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        944
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Extract from File\nConverts the binary Excel file into individual JSON items, one per row. Each item contains prospect_name, prospect_title, and company_name. The AI Agent will process each row independently.",
+        "height": 192,
+        "color": 4
+      },
+      "id": "6cc7fac2-9ca9-4e4a-a2d7-36494021689e",
+      "name": "Sticky Note 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4752,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. AI Agent\nThe brain of the workflow. For each prospect row, it calls the Customer_Research tool to gather live signals, then generates a structured meeting prep brief using the system prompt. Runs once per prospect.",
+        "height": 192,
+        "color": 4
+      },
+      "id": "421e4ead-4700-43c6-a133-eb6441a61884",
+      "name": "Sticky Note 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5024,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4. OpenAI Chat Model\nPowers the AI Agent. Using GPT but you can swap in any LLM supported by n8n, Claude, Gemini, or Mistral. Connect your API credentials here.",
+        "height": 188,
+        "width": 256,
+        "color": 6
+      },
+      "id": "46fa65bf-6f32-4370-8c65-cdb2d341dfcc",
+      "name": "Sticky Note 4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4832,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5. Prospect_Research\nTavily search tool connected to the AI Agent. The agent decides what to search for using $fromAI. Returns recent news, funding rounds, hires, and product signals to inform the brief. Add your TAVILY_API_KEY in n8n Variables.",
+        "height": 192,
+        "width": 288,
+        "color": 6
+      },
+      "id": "ff8afa65-cf19-4cb6-b228-fa438fb6ad53",
+      "name": "Sticky Note 5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5184,
+        1312
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 6. Edit Fields\nCleans up the AI Agent output into 4 labeled columns: prospect_name, prospect_title, company_name, and brief. Maps the raw output field to the friendly brief column name ready for Excel.",
+        "height": 192,
+        "color": 4
+      },
+      "id": "b49c7d30-80b2-4451-9396-82f99a5688a0",
+      "name": "Sticky Note 6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5296,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 7. Convert to File\nTakes the cleaned JSON rows and converts them back into a valid Excel binary file. Output is stored in the data binary field, ready to be sent back to the frontend.",
+        "height": 172,
+        "color": 4
+      },
+      "id": "e4d78ff2-702a-43e1-ab1e-8d35db115f43",
+      "name": "Sticky Note 7",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5456,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 8. Respond to Webhook\nSends the Excel binary back to the v0 frontend as the webhook response. Content-Type and Content-Disposition headers tell the browser to treat the response as a file download, not JSON.",
+        "height": 176,
+        "width": 304,
+        "color": 4
+      },
+      "id": "e853c925-4890-48cd-b296-9288255c6920",
+      "name": "Sticky Note 8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5616,
+        768
+      ]
+    },
+    {
+      "parameters": {
+        "query": "={{ $json.company_name }} news funding product launch 2025",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        5264,
+        1168
+      ],
+      "id": "7dc64573-423e-40ff-8212-960aae083a59",
+      "name": "Prospect_Research"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        []
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prospect_Research": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f70b83ed-aaa8-4952-84f5-af476ff45526",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d2926e605d262bee5909c7941095358b0b2fbb483629d7cc273c8d86e3c55860"
+  },
+  "id": "9r5ZFtjcpsEF7nQe",
+  "tags": [
+    {
+      "updatedAt": "2026-02-28T03:26:26.362Z",
+      "createdAt": "2026-02-28T03:26:26.362Z",
+      "id": "K33HrzRB0kaHoOyp",
+      "name": "meeting-prep"
+    },
+    {
+      "updatedAt": "2026-02-28T03:26:26.416Z",
+      "createdAt": "2026-02-28T03:26:26.416Z",
+      "id": "nf3Zdex9IbbsoycM",
+      "name": "ai-agent"
+    },
+    {
+      "updatedAt": "2026-02-28T03:26:26.392Z",
+      "createdAt": "2026-02-28T03:26:26.392Z",
+      "id": "tZCaPYPANS8s9Yrp",
+      "name": "sales"
+    }
+  ]
+}
