@@ -1,5 +1,4 @@
-[README.md](https://github.com/user-attachments/files/25826910/README.md)
-# AI Meeting Prep Assistant
+# AI Meeting Prep Assistant for AEs
 
 AI-powered meeting prep assistant that turns a prospect list into structured sales briefs — built with n8n, Tavily, and any LLM of your choice.
 
